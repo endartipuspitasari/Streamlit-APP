@@ -1,8 +1,15 @@
 # app_enhanced.py - ENHANCED VERSION (FIXED)
 import streamlit as st
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+
+# Plotly dengan error handling
+try:
+    import plotly.express as px
+    import plotly.graph_objects as go
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
+    st.error("📊 Plotly library not available. Please check requirements.txt")
 
 st.set_page_config(page_title="Talent Match Intelligence", layout="wide")
 
@@ -62,7 +69,7 @@ if st.session_state.get('generate_clicked'):
     st.header("🤖 AI-Generated Job Profile")
     job_profile = generate_ai_job_profile(role_name, job_level)
     
-    with st.expander("View Detailed Job Requirements", expanded=True):
+    with st.expander("View Detailed Job Requirements"):
         col1, col2, col3 = st.columns(3)
         
         with col1:
@@ -98,7 +105,7 @@ if st.session_state.get('generate_clicked'):
     
     # Ranked Talent List - FIXED
     st.header("🎖️ Ranked Talent Matches")
-    st.dataframe(df)  # Parameter problematic dihapus
+    st.dataframe(df)
     
     # Dashboard Metrics
     st.header("📊 Talent Match Dashboard")
@@ -114,90 +121,58 @@ if st.session_state.get('generate_clicked'):
         st.metric("Success Probability", "94%")
     
     # Visualizations - FIXED
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📈 Match Score Distribution")
-        fig_bar = px.bar(df.head(8), x='Name', y='Match Score', 
-                        title="Top 8 Talent Matches", color='Match Score',
-                        color_continuous_scale='viridis')
-        fig_bar.update_layout(xaxis_tickangle=-45)
-        st.plotly_chart(fig_bar)  # Parameter problematic dihapus
-    
-    with col2:
-        st.subheader("🎯 Directorate Distribution")
-        directorate_counts = df['Directorate'].value_counts()
-        fig_pie = px.pie(values=directorate_counts.values, 
-                        names=directorate_counts.index,
-                        title="Talents by Directorate")
-        st.plotly_chart(fig_pie)  # Parameter problematic dihapus
-    
-    # Strengths & Gaps Analysis
-    st.header("🔍 Success Pattern Analysis")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("✅ Elite Success Drivers")
-        st.write("""
-        - **Work Stamina** (High Pauli Score)
-        - **Focus Ability** (Low Faxtor = Less Distraction)  
-        - **Experience** (Long Tenure)
-        - **Strategic Thinking** (ENTP/ENFJ Profiles)
-        - **Leadership Stability** (DS DISC Profile)
-        """)
+    if PLOTLY_AVAILABLE:
+        col1, col2 = st.columns(2)
         
-        st.info("""
-        **Insight**: Elite performers excel in mental stamina and focus, 
-        not just raw intelligence or test scores.
-        """)
-    
-    with col2:
-        st.subheader("❌ Common Performance Gaps")
-        st.write("""
-        - **High Distraction** (High Faxtor Scores)
-        - **Short Organizational Tenure**  
-        - **Inconsistent Performance History**
-        - **Mismatched Behavioral Profiles**
-        - **Theoretical vs Practical Skills**
-        """)
+        with col1:
+            st.subheader("📈 Match Score Distribution")
+            fig_bar = px.bar(df.head(8), x='Name', y='Match Score', 
+                            title="Top 8 Talent Matches", color='Match Score',
+                            color_continuous_scale='viridis')
+            fig_bar.update_layout(xaxis_tickangle=-45)
+            st.plotly_chart(fig_bar, use_container_width=True)
         
-        st.warning("""
-        **Recommendation**: Focus development on attention control 
-        and practical skill application.
-        """)
-    
-    # Benchmark Comparison - FIXED
-    st.subheader("⚖️ Benchmark vs Candidate Profile")
-    
-    comparison_data = {
-        'Metric': ['Work Stamina', 'Focus Ability', 'Experience', 'Strategic Thinking', 'Leadership'],
-        'Elite Benchmark': [85, 42, 58, 90, 85],
-        'Top Candidate': [107, 46, 60, 85, 80],
-        'Average Employee': [62, 59, 50, 70, 65]
-    }
-    
-    df_comp = pd.DataFrame(comparison_data)
-    fig_radar = go.Figure()
-    
-    fig_radar.add_trace(go.Scatterpolar(
-        r=df_comp['Elite Benchmark'],
-        theta=df_comp['Metric'],
-        fill='toself',
-        name='Elite Benchmark'
-    ))
-    
-    fig_radar.add_trace(go.Scatterpolar(
-        r=df_comp['Top Candidate'], 
-        theta=df_comp['Metric'],
-        fill='toself',
-        name='Top Candidate'
-    ))
-    
-    fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-                          showlegend=True)
-    
-    st.plotly_chart(fig_radar)  # Parameter problematic dihapus
+        with col2:
+            st.subheader("🎯 Directorate Distribution")
+            directorate_counts = df['Directorate'].value_counts()
+            fig_pie = px.pie(values=directorate_counts.values, 
+                            names=directorate_counts.index,
+                            title="Talents by Directorate")
+            st.plotly_chart(fig_pie, use_container_width=True)
+        
+        # Benchmark Comparison - FIXED
+        st.subheader("⚖️ Benchmark vs Candidate Profile")
+        
+        comparison_data = {
+            'Metric': ['Work Stamina', 'Focus Ability', 'Experience', 'Strategic Thinking', 'Leadership'],
+            'Elite Benchmark': [85, 42, 58, 90, 85],
+            'Top Candidate': [107, 46, 60, 85, 80],
+            'Average Employee': [62, 59, 50, 70, 65]
+        }
+        
+        df_comp = pd.DataFrame(comparison_data)
+        fig_radar = go.Figure()
+        
+        fig_radar.add_trace(go.Scatterpolar(
+            r=df_comp['Elite Benchmark'],
+            theta=df_comp['Metric'],
+            fill='toself',
+            name='Elite Benchmark'
+        ))
+        
+        fig_radar.add_trace(go.Scatterpolar(
+            r=df_comp['Top Candidate'], 
+            theta=df_comp['Metric'],
+            fill='toself',
+            name='Top Candidate'
+        ))
+        
+        fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+                              showlegend=True)
+        
+        st.plotly_chart(fig_radar, use_container_width=True)
+    else:
+        st.warning("Visualizations disabled - Plotly not installed")
 
 else:
     # Default State
@@ -227,4 +202,3 @@ else:
 # Footer
 st.markdown("---")
 st.caption("Talent Match Intelligence System • Case Study 2025 • Data-Driven HR Analytics")
-
